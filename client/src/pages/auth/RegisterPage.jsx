@@ -1,27 +1,25 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Building,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Lock,
-  ArrowRight,
-  CheckCircle,
-  Activity,
-  Award,
-  Sparkles,
-  ShieldCheck,
-  AlertCircle
+import { Link, useNavigate } from "react-router-dom";
+import { 
+  Building, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Lock, 
+  CheckCircle, 
+  ArrowRight, 
+  ShieldCheck, 
+  Zap, 
+  FileText 
 } from "lucide-react";
 import api from "../../lib/api.js";
 
 /**
- * Premium split two-column Register page for new clinics
+ * Premium Two-Column Clinic Registration Page
  */
 const RegisterPage = () => {
-  // Form fields
+  // Form input states
   const [clinicName, setClinicName] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
@@ -29,31 +27,32 @@ const RegisterPage = () => {
   const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // UI state
+  
+  // App status states
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
+    setError("");
 
-    // Simple validations
-    if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+    // Simple password validation
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
       return;
     }
-
-    if (password.length < 8) {
-      setErrorMessage("Password must be at least 8 characters long.");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // POST mapping to /api/auth/register
+      // POST body matching server validation: name (ownerName), email, phone, clinicName, city, password
       await api.post("/auth/register", {
         name: ownerName,
         email,
@@ -65,135 +64,119 @@ const RegisterPage = () => {
 
       setIsSuccess(true);
     } catch (err) {
-      console.error("Registration failure:", err);
-      const msg = err.response?.data?.message || "Registration failed. This email or subdomain may already be registered.";
-      setErrorMessage(msg);
+      console.error("Registration error:", err);
+      setError(
+        err.response?.data?.message || 
+        "Failed to create clinic. This email might already be registered."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // 1. Render Success Screen
   if (isSuccess) {
     return (
-      <div style={styles.successWrapper}>
-        <div className="card animate-fade-in" style={styles.successCard}>
+      <div style={styles.pageWrapper}>
+        <div className="glassmorphism animate-fade-in" style={styles.successCard}>
           <div style={styles.successBadge}>
-            <CheckCircle size={44} color="white" />
+            <CheckCircle size={36} style={{ color: "white" }} />
           </div>
-          <h2 style={styles.successTitle}>Registration Complete!</h2>
-          <p style={styles.successSubtitle}>
-            Your ClinicBook dashboard has been successfully created. We have sent a welcome activation email to:
+          <h2 style={styles.successTitle}>Registration Completed!</h2>
+          <p style={styles.successDesc}>
+            A welcome verification email has been successfully sent to <strong style={{ color: "hsl(var(--teal-600))" }}>{email}</strong>. 
+            Please check your inbox (and spam folder) to verify your account details.
           </p>
-          <div style={styles.emailHighlight}>
-            <strong>{email}</strong>
-          </div>
-          <p style={styles.successInstructions}>
-            Please review your email to discover your unique subdomain, credentials summary, and onboarding checklist.
-          </p>
-          <Link to="/dashboard/login" className="btn btn-primary" style={styles.successBtn}>
-            <span>Go to Login Dashboard</span>
+          <button 
+            className="btn btn-primary" 
+            style={styles.successBtn}
+            onClick={() => navigate("/dashboard/login")}
+          >
+            <span>Go to Login</span>
             <ArrowRight size={18} />
-          </Link>
+          </button>
         </div>
       </div>
     );
   }
 
+  // 2. Render Two-Column Registration Form
   return (
-    <div style={styles.splitPageContainer}>
-      {/* Column 1: Gradient Value Proposition */}
-      <div style={styles.propositionColumn}>
-        <div style={styles.propOverlay}></div>
-        <div style={styles.propContent}>
-          {/* Logo */}
-          <div style={styles.logoSection}>
-            <div style={styles.logoBadgeSmall}>
-              <Activity size={18} color="white" />
-            </div>
-            <span style={styles.logoTextProp}>ClinicBook.in</span>
+    <div style={styles.registerContainer}>
+      {/* Left Column: Premium value propositions */}
+      <div style={styles.leftCol}>
+        <div style={styles.leftOverlay}></div>
+        <div style={styles.leftContent}>
+          <div style={styles.platformBadge}>
+            <span>ClinicBook.in</span>
           </div>
-
-          {/* Heading */}
-          <div style={styles.propHeader}>
-            <h1 style={styles.propMainTitle}>Digitalize Your Private Practice.</h1>
-            <p style={styles.propSubtitle}>
-              Streamline booking calendars, patient files, queue updates, and digital prescriptions in one premium platform.
-            </p>
-          </div>
+          
+          <h1 style={styles.leftTitle}>The Smartest Clinic Queue & Record Engine.</h1>
+          <p style={styles.leftSubtitle}>
+            Digitize appointments, automate patient reminders, and manage high-fidelity prescriptions in one unified staff dashboard.
+          </p>
 
           {/* Bullet points */}
-          <div style={styles.bulletsList}>
+          <div style={styles.bulletsSection}>
             <div style={styles.bulletItem}>
-              <div style={styles.bulletIconWrapper}>
-                <Sparkles size={18} color="hsl(var(--teal-200))" />
+              <div style={styles.bulletIconBox}>
+                <Zap size={20} style={{ color: "hsl(var(--teal-400))" }} />
               </div>
               <div>
-                <h3 style={styles.bulletTitle}>Smart Custom Subdomains</h3>
-                <p style={styles.bulletDesc}>
-                  Secure a dedicated booking website for patient reservation flows in seconds.
-                </p>
+                <h3 style={styles.bulletHeadline}>Automated WhatsApp Reminders</h3>
+                <p style={styles.bulletText}>Reduce patient no-shows by 85% with automatic 24-hour and 1-hour schedule cron alerts.</p>
               </div>
             </div>
 
             <div style={styles.bulletItem}>
-              <div style={styles.bulletIconWrapper}>
-                <Award size={18} color="hsl(var(--teal-200))" />
+              <div style={styles.bulletIconBox}>
+                <FileText size={20} style={{ color: "hsl(var(--teal-400))" }} />
               </div>
               <div>
-                <h3 style={styles.bulletTitle}>Real-time Dashboard & Sockets</h3>
-                <p style={styles.bulletDesc}>
-                  Monitor patient queues and check-in timeline states live, without reloading.
-                </p>
+                <h3 style={styles.bulletHeadline}>High-Fidelity PDF Prescriptions</h3>
+                <p style={styles.bulletText}>Generate structured, stylized prescription forms and upload buffers securely to Cloudinary.</p>
               </div>
             </div>
 
             <div style={styles.bulletItem}>
-              <div style={styles.bulletIconWrapper}>
-                <ShieldCheck size={18} color="hsl(var(--teal-200))" />
+              <div style={styles.bulletIconBox}>
+                <ShieldCheck size={20} style={{ color: "hsl(var(--teal-400))" }} />
               </div>
               <div>
-                <h3 style={styles.bulletTitle}>Enterprise Prescription PDFs</h3>
-                <p style={styles.bulletDesc}>
-                  Generate styled scripts with high-performance PDFKit integration.
-                </p>
+                <h3 style={styles.bulletHeadline}>Live Virtual Queue Rooms</h3>
+                <p style={styles.bulletText}>Stream live waitlists and schedule statuses seamlessly across clinic displays with Socket.io.</p>
               </div>
             </div>
-          </div>
-
-          <div style={styles.propFooter}>
-            <span>Joined by hundreds of physicians and private clinics nationwide.</span>
           </div>
         </div>
       </div>
 
-      {/* Column 2: Registration Form */}
-      <div style={styles.formColumn}>
-        <div style={styles.formColumnContent}>
+      {/* Right Column: Registration Form */}
+      <div style={styles.rightCol}>
+        <div className="animate-fade-in" style={styles.formContainer}>
           <div style={styles.formHeader}>
-            <h2 style={styles.formTitle}>Register Your Clinic</h2>
-            <p style={styles.formSubtitle}>Create your account dashboard today</p>
+            <h2 style={styles.formTitle}>Create Your Clinic</h2>
+            <p style={styles.formSubtitle}>Sign up to claim your booking subdomain in seconds</p>
           </div>
 
-          {/* Error Banner */}
-          {errorMessage && (
+          {error && (
             <div style={styles.errorAlert}>
-              <AlertCircle size={18} style={{ flexShrink: 0 }} />
-              <span>{errorMessage}</span>
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={styles.registerForm}>
-            {/* Split row for names */}
-            <div style={styles.splitRow}>
+          <form onSubmit={handleSubmit} style={styles.form}>
+            <div style={styles.formRow}>
               <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Clinic Name</label>
-                <div style={styles.inputWrapper}>
+                <label className="form-label" htmlFor="clinic-name">Clinic Name</label>
+                <div style={styles.inputContainer}>
                   <Building size={16} style={styles.inputIcon} />
                   <input
+                    id="clinic-name"
                     type="text"
                     required
                     className="form-input"
-                    placeholder="e.g. Apex Health Clinic"
+                    placeholder="Care Clinic"
                     value={clinicName}
                     onChange={(e) => setClinicName(e.target.value)}
                     style={styles.input}
@@ -202,14 +185,15 @@ const RegisterPage = () => {
               </div>
 
               <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Owner's Full Name</label>
-                <div style={styles.inputWrapper}>
+                <label className="form-label" htmlFor="owner-name">Owner Full Name</label>
+                <div style={styles.inputContainer}>
                   <User size={16} style={styles.inputIcon} />
                   <input
+                    id="owner-name"
                     type="text"
                     required
                     className="form-input"
-                    placeholder="e.g. Dr. John Doe"
+                    placeholder="Dr. Ajinkya Sai"
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     style={styles.input}
@@ -218,17 +202,17 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Split row for email/phone */}
-            <div style={styles.splitRow}>
+            <div style={styles.formRow}>
               <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Email Address</label>
-                <div style={styles.inputWrapper}>
+                <label className="form-label" htmlFor="reg-email">Email Address</label>
+                <div style={styles.inputContainer}>
                   <Mail size={16} style={styles.inputIcon} />
                   <input
+                    id="reg-email"
                     type="email"
                     required
                     className="form-input"
-                    placeholder="doctor@apexhealth.in"
+                    placeholder="doctor@clinicbook.in"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     style={styles.input}
@@ -237,14 +221,15 @@ const RegisterPage = () => {
               </div>
 
               <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Phone Number</label>
-                <div style={styles.inputWrapper}>
+                <label className="form-label" htmlFor="reg-phone">Phone Number</label>
+                <div style={styles.inputContainer}>
                   <Phone size={16} style={styles.inputIcon} />
                   <input
+                    id="reg-phone"
                     type="tel"
                     required
                     className="form-input"
-                    placeholder="e.g. +91 98765 43210"
+                    placeholder="9876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     style={styles.input}
@@ -253,16 +238,16 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* City input */}
             <div className="form-group">
-              <label className="form-label">City</label>
-              <div style={styles.inputWrapper}>
+              <label className="form-label" htmlFor="reg-city">City Location</label>
+              <div style={styles.inputContainer}>
                 <MapPin size={16} style={styles.inputIcon} />
                 <input
+                  id="reg-city"
                   type="text"
                   required
                   className="form-input"
-                  placeholder="e.g. Mumbai"
+                  placeholder="Pune"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   style={styles.input}
@@ -270,17 +255,17 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Split row for Passwords */}
-            <div style={styles.splitRow}>
+            <div style={styles.formRow}>
               <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Password</label>
-                <div style={styles.inputWrapper}>
+                <label className="form-label" htmlFor="reg-password">Password</label>
+                <div style={styles.inputContainer}>
                   <Lock size={16} style={styles.inputIcon} />
                   <input
+                    id="reg-password"
                     type="password"
                     required
                     className="form-input"
-                    placeholder="Min 8 characters"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     style={styles.input}
@@ -289,14 +274,15 @@ const RegisterPage = () => {
               </div>
 
               <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Confirm Password</label>
-                <div style={styles.inputWrapper}>
+                <label className="form-label" htmlFor="confirm-password">Confirm Password</label>
+                <div style={styles.inputContainer}>
                   <Lock size={16} style={styles.inputIcon} />
                   <input
+                    id="confirm-password"
                     type="password"
                     required
                     className="form-input"
-                    placeholder="Re-enter password"
+                    placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     style={styles.input}
@@ -305,21 +291,20 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
               className="btn btn-primary"
               style={styles.submitBtn}
             >
-              {isLoading ? "Creating Dashboard..." : "Create My Clinic Dashboard"}
+              {isLoading ? "Provisioning Dashboard..." : "Create My Clinic Dashboard"}
             </button>
           </form>
 
-          {/* Footer Backlink */}
-          <div style={styles.formFooter}>
-            <span>Already have an active account? </span>
-            <Link to="/dashboard/login" style={styles.backToLoginLink}>
+          {/* Login option */}
+          <div style={styles.loginRedirect}>
+            <span style={styles.redirectText}>Already have a clinic dashboard? </span>
+            <Link to="/dashboard/login" style={styles.redirectLink}>
               Login here
             </Link>
           </div>
@@ -330,129 +315,161 @@ const RegisterPage = () => {
 };
 
 const styles = {
-  splitPageContainer: {
-    display: "flex",
-    width: "100%",
+  pageWrapper: {
+    width: "100vw",
     height: "100vh",
-    overflow: "hidden",
-    backgroundColor: "hsl(var(--background))",
-  },
-  // Column 1 Styling
-  propositionColumn: {
-    flex: "1 1 45%",
-    background: "linear-gradient(135deg, hsl(180 80% 24%) 0%, hsl(210 20% 10%) 100%)",
-    color: "white",
-    display: "flex",
-    flexDirection: "column",
-    padding: "3.5rem",
-    position: "relative",
-    overflow: "hidden",
-    justifyContent: "space-between",
-  },
-  propOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    background: "radial-gradient(circle at 80% 20%, hsla(180, 50%, 40%, 0.15) 0%, transparent 60%)",
-    pointerEvents: "none",
-  },
-  propContent: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-    justifyContent: "space-between",
-    zIndex: 2,
-  },
-  logoSection: {
     display: "flex",
     alignItems: "center",
-    gap: "0.5rem",
+    justifyContent: "center",
+    backgroundColor: "hsl(var(--background))",
+    overflow: "hidden",
   },
-  logoBadgeSmall: {
-    width: "32px",
-    height: "32px",
-    borderRadius: "8px",
+  successCard: {
+    maxWidth: "500px",
+    width: "100%",
+    padding: "3.5rem 2.5rem",
+    borderRadius: "var(--radius-xl)",
+    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "1.5rem",
+    boxShadow: "var(--shadow-xl)",
+  },
+  successBadge: {
+    width: "72px",
+    height: "72px",
+    borderRadius: "50%",
     backgroundColor: "hsl(var(--teal-500))",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: "0 2px 6px rgba(13, 148, 136, 0.3)",
+    boxShadow: "0 10px 20px rgba(13, 148, 136, 0.3)",
   },
-  logoTextProp: {
-    fontSize: "1.125rem",
+  successTitle: {
+    fontSize: "1.75rem",
     fontWeight: "800",
+    color: "hsl(var(--text-primary))",
     letterSpacing: "-0.03em",
-    color: "white",
   },
-  propHeader: {
-    marginTop: "4rem",
+  successDesc: {
+    fontSize: "0.95rem",
+    color: "hsl(var(--text-secondary))",
+    lineHeight: "1.6",
+    margin: "0 0.5rem",
+  },
+  successBtn: {
+    padding: "0.875rem 2rem",
+    fontSize: "0.95rem",
+    marginTop: "0.5rem",
+    display: "flex",
+    gap: "0.5rem",
+    width: "100%",
+  },
+  registerContainer: {
+    display: "flex",
+    width: "100vw",
+    height: "100vh",
+    overflow: "hidden",
+    backgroundColor: "hsl(var(--surface))",
+  },
+  leftCol: {
+    flex: "1 1 45%",
+    background: "linear-gradient(135deg, hsl(var(--teal-800)) 0%, hsl(var(--slate-900)) 100%)",
+    position: "relative",
+    display: "none", // responsive hide
+    padding: "4rem",
+    color: "white",
+    flexDirection: "column",
+    justifyContent: "center",
+    // media query equivalent for desktop:
+    "@media (min-width: 1024px)": {
+      display: "flex",
+    },
+  },
+  leftOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(13, 148, 136, 0.05)",
+    zIndex: 1,
+  },
+  leftContent: {
+    position: "relative",
+    zIndex: 2,
+    maxWidth: "540px",
     display: "flex",
     flexDirection: "column",
-    gap: "1rem",
+    gap: "1.5rem",
   },
-  propMainTitle: {
+  platformBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "hsla(180, 50%, 94%, 0.15)",
+    border: "1px solid hsla(180, 50%, 94%, 0.2)",
+    padding: "0.375rem 1rem",
+    borderRadius: "9999px",
+    fontSize: "0.75rem",
+    fontWeight: "700",
+    color: "hsl(var(--teal-300))",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+  },
+  leftTitle: {
     fontSize: "2.5rem",
     fontWeight: "800",
+    lineHeight: "1.2",
     letterSpacing: "-0.03em",
-    lineHeight: "1.15",
   },
-  propSubtitle: {
-    fontSize: "1rem",
-    color: "hsl(var(--teal-100))",
+  leftSubtitle: {
+    fontSize: "1.05rem",
+    color: "hsl(var(--slate-300))",
     lineHeight: "1.6",
-    fontWeight: "400",
+    marginBottom: "1rem",
   },
-  bulletsList: {
-    margin: "4rem 0",
+  bulletsSection: {
     display: "flex",
     flexDirection: "column",
-    gap: "2rem",
+    gap: "1.5rem",
   },
   bulletItem: {
     display: "flex",
     gap: "1rem",
     alignItems: "flex-start",
   },
-  bulletIconWrapper: {
-    width: "36px",
-    height: "36px",
+  bulletIconBox: {
+    width: "40px",
+    height: "40px",
     borderRadius: "10px",
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    border: "1px solid rgba(255, 255, 255, 0.1)",
   },
-  bulletTitle: {
+  bulletHeadline: {
     fontSize: "1rem",
     fontWeight: "600",
     color: "white",
+    marginBottom: "0.25rem",
   },
-  bulletDesc: {
+  bulletText: {
     fontSize: "0.875rem",
-    color: "hsl(var(--slate-300))",
-    marginTop: "0.25rem",
-    lineHeight: "1.4",
+    color: "hsl(var(--slate-400))",
+    lineHeight: "1.5",
   },
-  propFooter: {
-    fontSize: "0.8125rem",
-    color: "hsl(var(--teal-300))",
-    fontWeight: "500",
-  },
-  // Column 2 Styling
-  formColumn: {
+  rightCol: {
     flex: "1 1 55%",
-    backgroundColor: "hsl(var(--surface))",
+    height: "100%",
+    overflowY: "auto",
+    padding: "3rem 2rem",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "3.5rem",
-    overflowY: "auto",
+    backgroundColor: "hsl(var(--background))",
   },
-  formColumnContent: {
+  formContainer: {
     width: "100%",
     maxWidth: "540px",
     display: "flex",
@@ -462,10 +479,10 @@ const styles = {
   formHeader: {
     display: "flex",
     flexDirection: "column",
-    gap: "0.25rem",
+    gap: "0.375rem",
   },
   formTitle: {
-    fontSize: "1.75rem",
+    fontSize: "1.875rem",
     fontWeight: "800",
     color: "hsl(var(--text-primary))",
     letterSpacing: "-0.03em",
@@ -476,27 +493,25 @@ const styles = {
     fontWeight: "500",
   },
   errorAlert: {
-    backgroundColor: "hsl(var(--rose-50) / 0.95)",
-    border: "1px solid hsl(var(--rose-200))",
+    backgroundColor: "hsl(var(--rose-500) / 0.1)",
+    border: "1px solid hsl(var(--rose-500) / 0.2)",
     color: "hsl(var(--rose-500))",
     padding: "0.875rem 1.25rem",
     borderRadius: "var(--radius-md)",
     fontSize: "0.875rem",
-    fontWeight: "600",
-    display: "flex",
-    gap: "0.75rem",
-    alignItems: "center",
+    fontWeight: "500",
   },
-  registerForm: {
+  form: {
     display: "flex",
     flexDirection: "column",
     gap: "0.5rem",
   },
-  splitRow: {
+  formRow: {
     display: "flex",
     gap: "1rem",
+    flexWrap: "wrap",
   },
-  inputWrapper: {
+  inputContainer: {
     position: "relative",
     width: "100%",
   },
@@ -514,84 +529,38 @@ const styles = {
   submitBtn: {
     width: "100%",
     padding: "0.875rem",
-    fontSize: "0.9375rem",
     marginTop: "1.25rem",
-  },
-  formFooter: {
-    textAlign: "center",
-    fontSize: "0.875rem",
-    color: "hsl(var(--text-secondary))",
-    fontWeight: "500",
-  },
-  backToLoginLink: {
-    color: "hsl(var(--teal-600))",
-    fontWeight: "600",
-  },
-  // Success Card Wrapper
-  successWrapper: {
-    width: "100%",
-    height: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "hsl(var(--background))",
-    padding: "1rem",
-  },
-  successCard: {
-    width: "100%",
-    maxWidth: "500px",
-    padding: "3.5rem",
-    textAlign: "center",
-    borderRadius: "var(--radius-xl)",
-    boxShadow: "var(--shadow-xl)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "1.5rem",
-  },
-  successBadge: {
-    width: "72px",
-    height: "72px",
-    borderRadius: "50%",
-    backgroundColor: "hsl(var(--teal-500))",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 8px 24px rgba(13, 148, 136, 0.3)",
-    marginBottom: "0.5rem",
-  },
-  successTitle: {
-    fontSize: "1.875rem",
-    fontWeight: "800",
-    color: "hsl(var(--text-primary))",
-    letterSpacing: "-0.03em",
-  },
-  successSubtitle: {
-    fontSize: "0.9375rem",
-    color: "hsl(var(--text-secondary))",
-    lineHeight: "1.5",
-  },
-  emailHighlight: {
-    backgroundColor: "hsl(var(--teal-50))",
-    border: "1px solid hsl(var(--teal-200))",
-    color: "hsl(var(--teal-700))",
-    padding: "0.75rem 1.5rem",
-    borderRadius: "var(--radius-md)",
     fontSize: "1rem",
   },
-  successInstructions: {
+  loginRedirect: {
+    textAlign: "center",
     fontSize: "0.875rem",
     color: "hsl(var(--text-secondary))",
-    lineHeight: "1.6",
-    maxWidth: "400px",
   },
-  successBtn: {
-    marginTop: "0.5rem",
-    width: "100%",
-    padding: "0.875rem",
-    display: "flex",
-    gap: "0.5rem",
+  redirectText: {
+    fontWeight: "500",
+  },
+  redirectLink: {
+    color: "hsl(var(--teal-600))",
+    fontWeight: "600",
+    cursor: "pointer",
   },
 };
+
+// Simple hook to inject left column flex rendering dynamically on media queries
+if (typeof window !== "undefined") {
+  const injectStyle = () => {
+    const styleEl = document.createElement("style");
+    styleEl.innerHTML = `
+      @media (min-width: 1024px) {
+        div[style*="leftCol"] {
+          display: flex !important;
+        }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  };
+  injectStyle();
+}
 
 export default RegisterPage;
