@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore.js";
 import api from "../../lib/api.js";
+import { toast } from "../../components/Toast.jsx";
 
 /**
  * Custom individual Stat Card Component
@@ -111,7 +112,7 @@ const HomePage = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard:home"] });
     } catch (err) {
       console.error("Failed to update appointment status:", err);
-      alert(err.response?.data?.message || "Could not update status. Please try again.");
+      toast.error(err.response?.data?.message || "Could not update status. Please try again.");
     }
   };
 
@@ -122,15 +123,62 @@ const HomePage = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard:home"] });
     } catch (err) {
       console.error("Failed to bulk confirm appointments:", err);
-      alert(err.response?.data?.message || "Bulk confirmation failed. Please try again.");
+      toast.error(err.response?.data?.message || "Bulk confirmation failed. Please try again.");
     }
   };
 
   if (isLoading) {
     return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.spinner}></div>
-        <span style={styles.loadingText}>Synchronizing Live Clinic Dashboard...</span>
+      <div style={styles.dashboardContainer} className="animate-fade-in">
+        {/* Skeleton Top Row Grid */}
+        <section style={styles.statsGrid}>
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className="card" style={styles.statCard}>
+              <div style={{ ...styles.statCardLeft, width: "70%" }}>
+                <div className="skeleton" style={{ height: "12px", width: "80px", borderRadius: "4px", marginBottom: "8px" }}></div>
+                <div className="skeleton" style={{ height: "24px", width: "50px", borderRadius: "6px" }}></div>
+              </div>
+              <div className="skeleton" style={{ width: "48px", height: "48px", borderRadius: "12px" }}></div>
+            </div>
+          ))}
+        </section>
+
+        {/* Skeleton Bottom Grid Columns */}
+        <div style={styles.colsGrid}>
+          <section style={styles.leftColumn} className="card">
+            <div style={{ ...styles.sectionHeader, borderBottom: "1px solid hsl(var(--surface-border))" }}>
+              <div className="skeleton" style={{ height: "20px", width: "180px", borderRadius: "4px" }}></div>
+            </div>
+            <div style={styles.timelineList}>
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} style={styles.timelineCard} className="card">
+                  <div style={styles.timelineCardMain}>
+                    <div className="skeleton" style={{ height: "28px", width: "90px", borderRadius: "6px" }}></div>
+                    <div style={{ flex: 1, marginLeft: "1rem" }}>
+                      <div className="skeleton" style={{ height: "14px", width: "120px", borderRadius: "4px", marginBottom: "6px" }}></div>
+                      <div className="skeleton" style={{ height: "10px", width: "80px", borderRadius: "3px" }}></div>
+                    </div>
+                    <div className="skeleton" style={{ height: "14px", width: "100px", borderRadius: "4px", marginLeft: "auto" }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section style={styles.rightColumn} className="card">
+            <div style={styles.panelHeader}>
+              <div className="skeleton" style={{ height: "20px", width: "150px", borderRadius: "4px" }}></div>
+            </div>
+            <div style={styles.pendingList}>
+              {Array.from({ length: 2 }).map((_, idx) => (
+                <div key={idx} style={styles.pendingCard}>
+                  <div className="skeleton" style={{ height: "14px", width: "110px", borderRadius: "4px", marginBottom: "8px" }}></div>
+                  <div className="skeleton" style={{ height: "10px", width: "140px", borderRadius: "3px" }}></div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
     );
   }

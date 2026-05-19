@@ -20,6 +20,19 @@ import {
   DollarSign
 } from "lucide-react";
 import api from "../../lib/api.js";
+import { toast } from "../../components/Toast.jsx";
+
+// Utility to format date in Indian style: 15 January 2024
+const formatIndianDate = (dateVal) => {
+  if (!dateVal) return "";
+  const d = new Date(dateVal);
+  const day = d.getDate();
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+};
 
 /**
  * Premium Appointments Page containing the list, filters, walk-in creation engine, and detailed slide-in side panel
@@ -133,7 +146,7 @@ const AppointmentsPage = () => {
         setSelectedAppointment((prev) => ({ ...prev, status }));
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update status.");
+      toast.error(err.response?.data?.message || "Failed to update appointment status.");
     }
   };
 
@@ -162,7 +175,7 @@ const AppointmentsPage = () => {
   const handleCreateWalkin = async (e) => {
     e.preventDefault();
     if (!walkinDoctor || !walkinSlot) {
-      alert("Please select a doctor and a valid available time slot.");
+      toast.warn("Please select a doctor and a valid available time slot.");
       return;
     }
 
@@ -198,14 +211,14 @@ const AppointmentsPage = () => {
       setWalkinNotes("");
       setIsNewPatient(false);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to book appointment.");
+      toast.error(err.response?.data?.message || "Failed to book walk-in appointment.");
     }
   };
 
   // 5. CSV Export Engine
   const handleExportCSV = () => {
     if (filteredAppointments.length === 0) {
-      alert("No appointments available to export.");
+      toast.warn("No appointments available to export for the selected filters.");
       return;
     }
 
@@ -377,7 +390,7 @@ const AppointmentsPage = () => {
                       </span>
                     </td>
                     <td style={styles.td}>{getStatusBadge(app.status)}</td>
-                    <td style={styles.td}>₹{app.consultationFee || 0}</td>
+                    <td style={styles.td}>₹{(app.consultationFee || 0).toLocaleString("en-IN")}</td>
                     <td style={{ ...styles.td, textAlign: "right", position: "relative" }}>
                       <button 
                         onClick={(e) => {
@@ -513,7 +526,7 @@ const AppointmentsPage = () => {
                 <div style={styles.detailsGrid}>
                   <div style={styles.detailItem}>
                     <DollarSign size={16} style={{ color: "hsl(var(--emerald-500))" }} />
-                    <span>Fee Charge: <strong>₹{selectedAppointment.consultationFee || 0}</strong></span>
+                    <span>Fee Charge: <strong>₹{(selectedAppointment.consultationFee || 0).toLocaleString("en-IN")}</strong></span>
                   </div>
                 </div>
               </div>

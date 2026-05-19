@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -10,6 +10,11 @@ import {
   Settings,
   LogOut,
   Building,
+  Sun,
+  Moon,
+  ChevronLeft,
+  ChevronRight,
+  Menu
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore.js";
 
@@ -19,6 +24,37 @@ import { useAuthStore } from "../store/authStore.js";
 const DashboardLayout = () => {
   const { clinic, clearAuth } = useAuthStore();
   const navigate = useNavigate();
+
+  // Sidebar collapse state
+  const [isCollapsed, setIsCollapsed] = useState(
+    localStorage.getItem("sidebar-collapsed") === "true"
+  );
+
+  // Dark theme state
+  const [darkMode, setDarkMode] = useState(
+    document.documentElement.classList.contains("dark") || localStorage.getItem("theme") === "dark"
+  );
+
+  // Initialize Dark Mode theme settings
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    const nextMode = !darkMode;
+    setDarkMode(nextMode);
+    localStorage.setItem("theme", nextMode ? "dark" : "light");
+  };
+
+  const toggleSidebar = () => {
+    const nextCollapsed = !isCollapsed;
+    setIsCollapsed(nextCollapsed);
+    localStorage.setItem("sidebar-collapsed", nextCollapsed ? "true" : "false");
+  };
 
   const handleLogout = () => {
     clearAuth();
@@ -38,9 +74,9 @@ const DashboardLayout = () => {
   return (
     <div style={styles.layoutContainer}>
       {/* Sidebar Navigation */}
-      <aside style={styles.sidebar}>
+      <aside style={{ ...styles.sidebar, width: isCollapsed ? "75px" : "240px" }}>
         {/* Header/Logo */}
-        <div style={styles.logoSection}>
+        <div style={{ ...styles.logoSection, padding: isCollapsed ? "1.5rem 0.5rem" : "1.5rem 1.25rem", justifyContent: isCollapsed ? "center" : "flex-start" }}>
           {clinic?.logo ? (
             <img src={clinic.logo} alt={clinic.name} style={styles.logoImage} />
           ) : (
@@ -48,7 +84,7 @@ const DashboardLayout = () => {
               <Building size={20} />
             </div>
           )}
-          <span style={styles.logoText}>ClinicBook</span>
+          {!isCollapsed && <span style={styles.logoText}>ClinicBook</span>}
         </div>
 
         {/* Navigation Items */}
@@ -60,17 +96,33 @@ const DashboardLayout = () => {
                 key={item.path}
                 to={item.path}
                 end={item.path === "/dashboard"}
+                title={isCollapsed ? item.name : undefined}
                 style={({ isActive }) => ({
                   ...styles.navLink,
+                  justifyContent: isCollapsed ? "center" : "flex-start",
+                  padding: isCollapsed ? "0.75rem 0" : "0.75rem 1rem",
                   ...(isActive ? styles.navLinkActive : {}),
                 })}
               >
                 <Icon size={18} />
-                <span>{item.name}</span>
+                {!isCollapsed && <span>{item.name}</span>}
               </NavLink>
             );
           })}
         </nav>
+
+        {/* Collapse Sidebar Trigger Button */}
+        <div style={{ ...styles.collapseTriggerRow, padding: isCollapsed ? "1rem 0" : "1rem 1.25rem", justifyContent: isCollapsed ? "center" : "flex-start" }}>
+          <button 
+            type="button" 
+            onClick={toggleSidebar} 
+            style={styles.collapseBtn}
+            title={isCollapsed ? "Expand Navigation" : "Collapse Navigation"}
+          >
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            {!isCollapsed && <span style={{ fontSize: "0.75rem", fontWeight: "600" }}>Collapse Sidebar</span>}
+          </button>
+        </div>
       </aside>
 
       {/* Main viewport area */}
@@ -81,10 +133,27 @@ const DashboardLayout = () => {
             <Building size={18} style={styles.headerIcon} />
             <h1 style={styles.clinicName}>{clinic?.name || "My Clinic"}</h1>
           </div>
-          <button onClick={handleLogout} className="btn btn-secondary" style={styles.logoutBtn}>
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {/* Dark Mode Toggle Button */}
+            <button 
+              type="button" 
+              onClick={toggleDarkMode} 
+              style={styles.themeToggleBtn}
+              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {darkMode ? (
+                <Sun size={18} style={{ color: "hsl(var(--amber-500))" }} />
+              ) : (
+                <Moon size={18} style={{ color: "hsl(var(--text-secondary))" }} />
+              )}
+            </button>
+
+            <button onClick={handleLogout} className="btn btn-secondary" style={styles.logoutBtn}>
+              <LogOut size={16} />
+              <span>Logout</span>
+            </button>
+          </div>
         </header>
 
         {/* Router Outlet for nested pages */}
@@ -211,6 +280,35 @@ const styles = {
     padding: "2rem",
     backgroundColor: "hsl(var(--background))",
   },
+  collapseTriggerRow: {
+    borderTop: "1px solid hsl(var(--surface-border))",
+    display: "flex",
+    alignItems: "center",
+    width: "100%",
+  },
+  collapseBtn: {
+    background: "transparent",
+    border: "none",
+    color: "hsl(var(--text-secondary))",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    width: "100%",
+    padding: "0.5rem 0",
+    transition: "all 0.2s ease",
+  },
+  themeToggleBtn: {
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    padding: "0.5rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "50%",
+    transition: "all 0.2s ease",
+  }
 };
 
 export default DashboardLayout;
