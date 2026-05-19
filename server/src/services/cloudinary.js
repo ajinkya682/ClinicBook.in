@@ -31,3 +31,18 @@ export const uploadToCloudinary = (fileBuffer, folder) => {
     uploadStream.end(fileBuffer);
   });
 };
+
+/**
+ * Deletes an asset from Cloudinary by its public ID.
+ * @param {string} publicId - The public ID of the asset to delete.
+ * @returns {Promise<object>} - The Cloudinary destroy result.
+ */
+export const deleteFromCloudinary = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result;
+  } catch (error) {
+    console.error("Cloudinary Delete Error:", error);
+    throw error;
+  }
+};
