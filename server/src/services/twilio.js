@@ -4,7 +4,10 @@ import config from "../config/config.js";
 const accountSid = config.twilio.accountSid;
 const authToken = config.twilio.authToken;
 
-const twilioClient = twilio(accountSid, authToken);
+let twilioClient = null;
+if (accountSid && accountSid.startsWith("AC")) {
+  twilioClient = twilio(accountSid, authToken);
+}
 
 /**
  * Send WhatsApp message using Twilio
@@ -14,9 +17,9 @@ const twilioClient = twilio(accountSid, authToken);
  */
 export const sendWhatsApp = async (phone, message) => {
   try {
-    if (!config.twilio.accountSid || !config.twilio.authToken) {
+    if (!twilioClient) {
       console.warn(
-        "Twilio credentials not configured. Skipping WhatsApp message.",
+        "Twilio is not properly configured (requires SID starting with 'AC'). Skipping WhatsApp message.",
       );
       return { sid: "mock_sid_whatsapp", status: "skipped" };
     }
@@ -48,8 +51,8 @@ export const sendWhatsApp = async (phone, message) => {
  */
 export const sendSMS = async (phone, message) => {
   try {
-    if (!config.twilio.accountSid || !config.twilio.authToken) {
-      console.warn("Twilio credentials not configured. Skipping SMS.");
+    if (!twilioClient) {
+      console.warn("Twilio is not properly configured (requires SID starting with 'AC'). Skipping SMS.");
       return { sid: "mock_sid_sms", status: "skipped" };
     }
 
