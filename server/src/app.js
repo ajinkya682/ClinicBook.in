@@ -5,6 +5,7 @@ import helmet from "helmet";
 import cors from "cors";
 import mongoSanitize from "express-mongo-sanitize";
 import config from "./config/config.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
 
@@ -37,16 +38,6 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
-  console.error("Global Error Handler Catch:", err);
-  
-  const statusCode = err.statusCode || 500;
-  
-  res.status(statusCode).json({
-    success: false,
-    message: err.message || "Internal Server Error",
-    stack: process.env.NODE_ENV === "production" ? undefined : err.stack,
-  });
-});
+app.use(errorHandler);
 
 export default app;
