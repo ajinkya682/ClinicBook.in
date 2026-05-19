@@ -6,8 +6,9 @@ import LoginPage from "./pages/auth/LoginPage.jsx";
 import RegisterPage from "./pages/auth/RegisterPage.jsx";
 import AppointmentsPage from "./pages/dashboard/AppointmentsPage.jsx";
 import HomePage from "./pages/dashboard/HomePage.jsx";
+import PatientsPage from "./pages/dashboard/PatientsPage.jsx";
+import PatientDetailPage from "./pages/dashboard/PatientDetailPage.jsx";
 import {
-  Patients,
   Doctors,
   Prescriptions,
   Reviews,
@@ -40,7 +41,8 @@ const App = () => {
           {/* Nested routes mapped inside DashboardLayout shell */}
           <Route index element={<HomePage />} />
           <Route path="appointments" element={<AppointmentsPage />} />
-          <Route path="patients" element={<Patients />} />
+          <Route path="patients" element={<PatientsPage />} />
+          <Route path="patients/:id" element={<PatientDetailPage />} />
           <Route path="doctors" element={<Doctors />} />
           <Route path="prescriptions" element={<Prescriptions />} />
           <Route path="reviews" element={<Reviews />} />
