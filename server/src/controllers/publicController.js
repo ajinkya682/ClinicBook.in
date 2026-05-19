@@ -2,6 +2,7 @@ import Clinic from "../models/clinicModel.js";
 import Doctor from "../models/doctorModel.js";
 import Patient from "../models/patientModel.js";
 import Appointment from "../models/appointmentModel.js";
+import Review from "../models/reviewModel.js";
 import { generateBookingId } from "../utils/bookingId.js";
 import { sendWhatsApp } from "../services/twilio.js";
 import { getIO } from "../utils/socketIO.js";
@@ -403,3 +404,53 @@ export const getBookingStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get public reviews for booking page (unauthenticated, resolved under clinicContext)
+ */
+export const getPublicReviews = async (req, res, next) => {
+  try {
+    const clinicId = req.clinicContext._id;
+
+    // Filter visible, non-flagged reviews
+    const reviews = await Review.find({
+      clinicId,
+      isVisible: { $ne: false },
+      isFlagged: { $ne: true },
+    })
+      .populate("patientId", "name")
+      .sort({ createdAt: -1 });
+
+    const totalReviews = reviews.length;
+    let averageRating = 0;
+    const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    if (totalReviews > 0) {
+      let sum = 0;
+      reviews.forEach((review) => {
+        sum += review.rating;
+        const r = Math.round(review.rating);
+        if (ratingDistribution[r] !== undefined) {
+          ratingDistribution[r]++;
+        }
+      });
+      averageRating = parseFloat((sum / totalReviews).toFixed(1));
+    }
+
+    // Limit to latest 10 reviews
+    const latestReviews = reviews.slice(0, 10);
+
+    res.status(200).json({
+      success: true,
+      reviews: latestReviews,
+      stats: {
+        averageRating,
+        totalReviews,
+        ratingDistribution,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

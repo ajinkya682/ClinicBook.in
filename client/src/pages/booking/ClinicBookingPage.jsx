@@ -31,6 +31,27 @@ const hexToRgb = (hex) => {
   return `${r}, ${g}, ${b}`;
 };
 
+// Helper to render star rating stars
+const renderStars = (rating) => {
+  return (
+    <div style={{ display: "flex", gap: "2px", color: "#f59e0b" }}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span key={i} style={{ fontSize: "1.1rem" }}>
+          {i < Math.round(rating) ? "★" : "☆"}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+// Helper to format patient name to first name and last initial
+const formatName = (patientName) => {
+  if (!patientName) return "Anonymous Patient";
+  const parts = patientName.trim().split(" ");
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+};
+
 const ClinicBookingPage = () => {
   const { subdomain } = useParams();
   const bookingSectionRef = useRef(null);
@@ -106,6 +127,20 @@ const ClinicBookingPage = () => {
       refetchSlots();
     }
   }, [selectedDoctor, selectedDate]);
+
+  // 4. Fetch Public Reviews & Stats
+  const { 
+    data: reviewsData
+  } = useQuery({
+    queryKey: ["publicReviews", subdomain],
+    queryFn: async () => {
+      const response = await api.get("/public/reviews", {
+        params: { subdomain }
+      });
+      return response.data;
+    },
+    enabled: !!subdomain
+  });
 
   // Dynamic next 7 days compiler
   const [weekDays, setWeekDays] = useState([]);
@@ -753,6 +788,80 @@ const ClinicBookingPage = () => {
           </section>
         )}
 
+        {/* SECTION D: REVIEWS & RATINGS */}
+        {reviewsData && (
+          <section style={styles.sectionBlock} className="animate-fade-in">
+            <h2 style={styles.sectionHeading}>Patient Reviews & Ratings</h2>
+            <span style={styles.sectionSubHeading}>Read authentic feedback from patients verified by ClinicBook networks</span>
+
+            {/* Overall stats layout */}
+            <div className="card" style={styles.reviewsStatsCard}>
+              <div style={styles.statsLeftCol}>
+                <span style={styles.largeRatingNum}>{reviewsData.stats?.averageRating || "0.0"}</span>
+                <div style={{ margin: "0.25rem 0" }}>
+                  {renderStars(reviewsData.stats?.averageRating || 5)}
+                </div>
+                <span style={styles.statsReviewsCount}>{reviewsData.stats?.totalReviews || 0} Ratings</span>
+              </div>
+
+              <div style={styles.statsDivider}></div>
+
+              <div style={styles.statsRightCol}>
+                {[5, 4, 3, 2, 1].map((rating) => {
+                  const count = reviewsData.stats?.ratingDistribution?.[rating] || 0;
+                  const total = reviewsData.stats?.totalReviews || 1;
+                  const pct = reviewsData.stats?.totalReviews > 0 ? (count / total) * 100 : 0;
+                  return (
+                    <div key={rating} style={styles.distRow}>
+                      <span style={styles.distLabel}>{rating} Stars</span>
+                      <div style={styles.distBarBg}>
+                        <div style={{ ...styles.distBarFill, width: `${pct}%`, backgroundColor: `#${primaryColor}` }}></div>
+                      </div>
+                      <span style={styles.distCount}>{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Latest reviews list */}
+            <div style={styles.reviewsList}>
+              {reviewsData.reviews?.map((review) => (
+                <div key={review._id} className="card" style={styles.reviewCardItem}>
+                  <div style={styles.reviewHeader}>
+                    <div style={{ ...styles.reviewerAvatar, backgroundColor: `rgba(${hexToRgb(primaryColor)}, 0.08)`, color: `#${primaryColor}` }}>
+                      {review.patientId?.name ? review.patientId.name[0].toUpperCase() : "P"}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={styles.reviewerName}>{formatName(review.patientId?.name)}</div>
+                      <div style={styles.reviewDateRow}>
+                        {renderStars(review.rating)}
+                        <span style={styles.reviewDot}>•</span>
+                        <span>{new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p style={styles.reviewComment}>{review.comment || "No comment provided by the patient."}</p>
+
+                  {review.reply && (
+                    <div style={{ ...styles.clinicReplyBox, borderLeftColor: `#${primaryColor}` }}>
+                      <div style={styles.replyHeader}>
+                        <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#334155" }}>Response from {clinicData.name}</span>
+                      </div>
+                      <p style={styles.replyText}>{review.reply}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {(!reviewsData.reviews || reviewsData.reviews.length === 0) && (
+                <div style={styles.emptyReviews}>No patient reviews recorded yet. Be the first to share your experience!</div>
+              )}
+            </div>
+          </section>
+        )}
+
       </main>
 
       {/* Footer credits */}
@@ -1277,6 +1386,150 @@ const styles = {
     color: "#64748b",
     flexWrap: "wrap",
     gap: "0.5rem"
+  },
+  reviewsStatsCard: {
+    display: "flex",
+    padding: "1.5rem",
+    backgroundColor: "white",
+    alignItems: "center",
+    gap: "2rem",
+    flexWrap: "wrap"
+  },
+  statsLeftCol: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    minWidth: "140px"
+  },
+  largeRatingNum: {
+    fontSize: "2.75rem",
+    fontWeight: "900",
+    color: "#0f172a",
+    lineHeight: "1"
+  },
+  statsReviewsCount: {
+    fontSize: "0.75rem",
+    color: "#64748b",
+    fontWeight: "600",
+    marginTop: "0.25rem"
+  },
+  statsDivider: {
+    width: "1px",
+    height: "100px",
+    backgroundColor: "#e2e8f0",
+    alignSelf: "stretch",
+    display: "block"
+  },
+  statsRightCol: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.375rem",
+    minWidth: "200px"
+  },
+  distRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+    fontSize: "0.75rem",
+    color: "#475569"
+  },
+  distLabel: {
+    width: "55px",
+    fontWeight: "600"
+  },
+  distBarBg: {
+    flex: 1,
+    height: "6px",
+    backgroundColor: "#e2e8f0",
+    borderRadius: "3px",
+    overflow: "hidden"
+  },
+  distBarFill: {
+    height: "100%",
+    borderRadius: "3px"
+  },
+  distCount: {
+    width: "20px",
+    textAlign: "right",
+    fontWeight: "750",
+    color: "#0f172a"
+  },
+  reviewsList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+    marginTop: "1rem"
+  },
+  reviewCardItem: {
+    padding: "1.25rem",
+    backgroundColor: "white",
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.75rem"
+  },
+  reviewHeader: {
+    display: "flex",
+    gap: "0.75rem",
+    alignItems: "center"
+  },
+  reviewerAvatar: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "800",
+    fontSize: "0.875rem"
+  },
+  reviewerName: {
+    fontSize: "0.8125rem",
+    fontWeight: "850",
+    color: "#0f172a"
+  },
+  reviewDateRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    fontSize: "0.6875rem",
+    color: "#64748b"
+  },
+  reviewDot: {
+    opacity: 0.5
+  },
+  reviewComment: {
+    fontSize: "0.8125rem",
+    color: "#334155",
+    lineHeight: "1.5"
+  },
+  clinicReplyBox: {
+    borderLeft: "3.5px solid",
+    backgroundColor: "#f8fafc",
+    padding: "0.75rem 1rem",
+    borderRadius: "0 8px 8px 0",
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.25rem",
+    marginTop: "0.25rem"
+  },
+  replyHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem"
+  },
+  replyText: {
+    fontSize: "0.75rem",
+    color: "#475569",
+    lineHeight: "1.5"
+  },
+  emptyReviews: {
+    textAlign: "center",
+    padding: "2.5rem",
+    color: "#64748b",
+    backgroundColor: "#f1f5f9",
+    borderRadius: "10px",
+    fontSize: "0.8125rem"
   }
 };
 

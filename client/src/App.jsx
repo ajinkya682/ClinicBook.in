@@ -12,9 +12,7 @@ import DoctorsPage from "./pages/dashboard/DoctorsPage.jsx";
 import PrescriptionsPage from "./pages/dashboard/PrescriptionsPage.jsx";
 import SettingsPage from "./pages/dashboard/SettingsPage.jsx";
 import ClinicBookingPage from "./pages/booking/ClinicBookingPage.jsx";
-import {
-  Reviews,
-} from "./pages/Placeholders.jsx";
+import ReviewsPage from "./pages/dashboard/ReviewsPage.jsx";
 
 /**
  * Main application React Router structure
@@ -49,7 +47,7 @@ const App = () => {
           <Route path="patients/:id" element={<PatientDetailPage />} />
           <Route path="doctors" element={<DoctorsPage />} />
           <Route path="prescriptions" element={<PrescriptionsPage />} />
-          <Route path="reviews" element={<Reviews />} />
+          <Route path="reviews" element={<ReviewsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
