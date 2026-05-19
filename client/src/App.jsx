@@ -10,9 +10,9 @@ import PatientsPage from "./pages/dashboard/PatientsPage.jsx";
 import PatientDetailPage from "./pages/dashboard/PatientDetailPage.jsx";
 import DoctorsPage from "./pages/dashboard/DoctorsPage.jsx";
 import PrescriptionsPage from "./pages/dashboard/PrescriptionsPage.jsx";
+import SettingsPage from "./pages/dashboard/SettingsPage.jsx";
 import {
   Reviews,
-  Settings,
 } from "./pages/Placeholders.jsx";
 
 /**
@@ -46,7 +46,7 @@ const App = () => {
           <Route path="doctors" element={<DoctorsPage />} />
           <Route path="prescriptions" element={<PrescriptionsPage />} />
           <Route path="reviews" element={<Reviews />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
 
         {/* Catch-all 404 redirect */}
