@@ -3,6 +3,7 @@ import Patient from "../models/patientModel.js";
 import Doctor from "../models/doctorModel.js";
 import { generateBookingId } from "../utils/bookingId.js";
 import { sendWhatsApp } from "../services/twilio.js";
+import { getIO } from "../utils/socketIO.js";
 
 /**
  * Helper to parse a time slot string like "9:00 AM" or "10:30 PM" to absolute minutes
@@ -17,6 +18,37 @@ const parseTimeToMinutes = (timeStr) => {
   if (ampm === "PM" && hours !== 12) hours += 12;
   if (ampm === "AM" && hours === 12) hours = 0;
   return hours * 60 + minutes;
+};
+
+/**
+ * Helper to emit real-time queue updates to the clinic room
+ */
+const emitQueueUpdate = async (clinicId) => {
+  try {
+    const io = getIO();
+    if (!io) return;
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const queue = await Appointment.find({
+      clinicId,
+      appointmentDate: { $gte: start, $lte: end },
+      status: { $in: ["pending", "confirmed", "noShow"] },
+    })
+      .populate("patientId", "name phone")
+      .populate("doctorId", "name specialization");
+
+    const sortedQueue = queue.sort((a, b) => {
+      return parseTimeToMinutes(a.timeSlot) - parseTimeToMinutes(b.timeSlot);
+    });
+
+    io.to(clinicId.toString()).emit("queue:updated", sortedQueue);
+  } catch (err) {
+    console.error("Failed to emit real-time queue update:", err);
+  }
 };
 
 /**
@@ -217,10 +249,14 @@ export const createAppointment = async (req, res, next) => {
     }
 
     // 6. Emit Socket.io event safely
-    const io = req.app.get("io");
+    const io = getIO();
     if (io) {
       io.to(clinicId.toString()).emit("appointmentCreated", appointment);
+      io.to(clinicId.toString()).emit("appointment:new", appointment);
     }
+
+    // Trigger queue updates
+    await emitQueueUpdate(clinicId);
 
     res.status(201).json({
       success: true,
@@ -282,10 +318,14 @@ export const updateAppointmentStatus = async (req, res, next) => {
     }
 
     // Emit Socket event
-    const io = req.app.get("io");
+    const io = getIO();
     if (io) {
       io.to(clinicId.toString()).emit("appointmentUpdated", appointment);
+      io.to(clinicId.toString()).emit("appointment:updated", appointment);
     }
+
+    // Trigger queue updates
+    await emitQueueUpdate(clinicId);
 
     res.status(200).json({
       success: true,

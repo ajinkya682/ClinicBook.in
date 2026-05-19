@@ -4,6 +4,50 @@ import Patient from "../models/patientModel.js";
 import Appointment from "../models/appointmentModel.js";
 import { generateBookingId } from "../utils/bookingId.js";
 import { sendWhatsApp } from "../services/twilio.js";
+import { getIO } from "../utils/socketIO.js";
+
+/**
+ * Helper to emit real-time queue updates to the clinic room
+ */
+const emitQueueUpdate = async (clinicId) => {
+  try {
+    const io = getIO();
+    if (!io) return;
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const queue = await Appointment.find({
+      clinicId,
+      appointmentDate: { $gte: start, $lte: end },
+      status: { $in: ["pending", "confirmed", "noShow"] },
+    })
+      .populate("patientId", "name phone")
+      .populate("doctorId", "name specialization");
+
+    const parseTimeToMinutes = (timeStr) => {
+      if (!timeStr) return 9999;
+      const match = timeStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+      if (!match) return 9999;
+      let hours = parseInt(match[1]);
+      const minutes = parseInt(match[2]);
+      const ampm = match[3].toUpperCase();
+      if (ampm === "PM" && hours !== 12) hours += 12;
+      if (ampm === "AM" && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    };
+
+    const sortedQueue = queue.sort((a, b) => {
+      return parseTimeToMinutes(a.timeSlot) - parseTimeToMinutes(b.timeSlot);
+    });
+
+    io.to(clinicId.toString()).emit("queue:updated", sortedQueue);
+  } catch (err) {
+    console.error("Failed to emit real-time queue update:", err);
+  }
+};
 
 /**
  * Get public profile and details of the clinic
@@ -306,10 +350,14 @@ export const createPatientBooking = async (req, res, next) => {
     }
 
     // 6. Emit Socket event
-    const io = req.app.get("io");
+    const io = getIO();
     if (io) {
       io.to(clinicId.toString()).emit("appointmentCreated", appointment);
+      io.to(clinicId.toString()).emit("appointment:new", appointment);
     }
+
+    // Trigger queue updates
+    await emitQueueUpdate(clinicId);
 
     res.status(201).json({
       success: true,
