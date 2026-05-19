@@ -11,6 +11,7 @@ import patientRoutes from "./routes/patientRoutes.js";
 import doctorRoutes from "./routes/doctorRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import prescriptionRoutes from "./routes/prescriptionRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
