@@ -34,6 +34,10 @@ const config = {
     user: process.env.EMAIL_USER || "",
     pass: process.env.EMAIL_PASS || "",
   },
+  razorpay: {
+    keyId: process.env.RAZORPAY_KEY_ID || "",
+    keySecret: process.env.RAZORPAY_KEY_SECRET || "",
+  },
 };
 
 export default config;
