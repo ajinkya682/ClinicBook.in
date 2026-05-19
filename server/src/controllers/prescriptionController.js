@@ -310,3 +310,38 @@ export const getPrescriptionByAppointment = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get all prescriptions for the clinic (with search filtering)
+ */
+export const getPrescriptions = async (req, res, next) => {
+  try {
+    const clinicId = req.clinic._id;
+    const { search } = req.query;
+
+    const filter = { clinicId };
+
+    const prescriptions = await Prescription.find(filter)
+      .populate("patientId")
+      .populate("doctorId", "name specialization qualifications")
+      .sort({ createdAt: -1 });
+
+    let filtered = prescriptions;
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filtered = prescriptions.filter(pres => {
+        const pName = pres.patientId?.name || "";
+        const pDate = new Date(pres.createdAt).toDateString();
+        const diagnosis = pres.diagnosis || "";
+        return searchRegex.test(pName) || searchRegex.test(pDate) || searchRegex.test(diagnosis);
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      prescriptions: filtered,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

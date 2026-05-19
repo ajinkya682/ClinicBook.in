@@ -9,8 +9,8 @@ import HomePage from "./pages/dashboard/HomePage.jsx";
 import PatientsPage from "./pages/dashboard/PatientsPage.jsx";
 import PatientDetailPage from "./pages/dashboard/PatientDetailPage.jsx";
 import DoctorsPage from "./pages/dashboard/DoctorsPage.jsx";
+import PrescriptionsPage from "./pages/dashboard/PrescriptionsPage.jsx";
 import {
-  Prescriptions,
   Reviews,
   Settings,
 } from "./pages/Placeholders.jsx";
@@ -44,7 +44,7 @@ const App = () => {
           <Route path="patients" element={<PatientsPage />} />
           <Route path="patients/:id" element={<PatientDetailPage />} />
           <Route path="doctors" element={<DoctorsPage />} />
-          <Route path="prescriptions" element={<Prescriptions />} />
+          <Route path="prescriptions" element={<PrescriptionsPage />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="settings" element={<Settings />} />
         </Route>

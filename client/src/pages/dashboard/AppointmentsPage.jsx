@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { 
   Calendar, 
   User, 
@@ -25,6 +26,7 @@ import api from "../../lib/api.js";
  */
 const AppointmentsPage = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const todayStr = new Date().toISOString().split("T")[0];
 
   // Filters State
@@ -553,6 +555,19 @@ const AppointmentsPage = () => {
                     Complete
                   </button>
                 </>
+              )}
+              {selectedAppointment.status === "completed" && (
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    setSelectedAppointment(null);
+                    navigate("/dashboard/prescriptions", { state: { writePrescApp: selectedAppointment } });
+                  }}
+                  style={{ width: "100%", justifyContent: "center", gap: "0.5rem" }}
+                >
+                  <FileText size={16} />
+                  <span>Write Prescription</span>
+                </button>
               )}
             </div>
           </div>
