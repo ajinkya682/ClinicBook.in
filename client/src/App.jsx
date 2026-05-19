@@ -11,6 +11,7 @@ import PatientDetailPage from "./pages/dashboard/PatientDetailPage.jsx";
 import DoctorsPage from "./pages/dashboard/DoctorsPage.jsx";
 import PrescriptionsPage from "./pages/dashboard/PrescriptionsPage.jsx";
 import SettingsPage from "./pages/dashboard/SettingsPage.jsx";
+import ClinicBookingPage from "./pages/booking/ClinicBookingPage.jsx";
 import {
   Reviews,
 } from "./pages/Placeholders.jsx";
@@ -28,6 +29,9 @@ const App = () => {
         {/* Public auth routes */}
         <Route path="/dashboard/login" element={<LoginPage />} />
         <Route path="/dashboard/register" element={<RegisterPage />} />
+        
+        {/* Public patient booking routing */}
+        <Route path="/booking/:subdomain" element={<ClinicBookingPage />} />
 
         {/* Protected dashboard shell */}
         <Route
