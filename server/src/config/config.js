@@ -38,6 +38,7 @@ const config = {
     keyId: process.env.RAZORPAY_KEY_ID || "",
     keySecret: process.env.RAZORPAY_KEY_SECRET || "",
   },
+  frontendURL: process.env.FRONTEND_URL || "http://localhost:5173",
 };
 
 export default config;
