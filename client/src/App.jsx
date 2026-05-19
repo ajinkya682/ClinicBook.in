@@ -8,8 +8,8 @@ import AppointmentsPage from "./pages/dashboard/AppointmentsPage.jsx";
 import HomePage from "./pages/dashboard/HomePage.jsx";
 import PatientsPage from "./pages/dashboard/PatientsPage.jsx";
 import PatientDetailPage from "./pages/dashboard/PatientDetailPage.jsx";
+import DoctorsPage from "./pages/dashboard/DoctorsPage.jsx";
 import {
-  Doctors,
   Prescriptions,
   Reviews,
   Settings,
@@ -43,7 +43,7 @@ const App = () => {
           <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="patients" element={<PatientsPage />} />
           <Route path="patients/:id" element={<PatientDetailPage />} />
-          <Route path="doctors" element={<Doctors />} />
+          <Route path="doctors" element={<DoctorsPage />} />
           <Route path="prescriptions" element={<Prescriptions />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="settings" element={<Settings />} />
