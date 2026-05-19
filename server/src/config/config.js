@@ -39,6 +39,9 @@ const config = {
     keySecret: process.env.RAZORPAY_KEY_SECRET || "",
   },
   frontendURL: process.env.FRONTEND_URL || "http://localhost:5173",
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET || "default_jwt_access_secret_key_12345!",
+  },
 };
 
 export default config;
