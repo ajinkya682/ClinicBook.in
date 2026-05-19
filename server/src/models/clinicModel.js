@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const openingHourSchema = new mongoose.Schema(
   {
@@ -61,6 +62,27 @@ const clinicSchema = new mongoose.Schema(
   },
   { timestamps: false },
 );
+
+clinicSchema.index({ slug: 1 }, { unique: true });
+clinicSchema.index({ subdomain: 1 }, { unique: true });
+clinicSchema.index({ ownerEmail: 1 }, { unique: true });
+
+clinicSchema.pre("save", async function (next) {
+  if (!this.isModified("passwordHash")) {
+    return next();
+  }
+
+  try {
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+clinicSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.passwordHash);
+};
 
 const Clinic = mongoose.model("Clinic", clinicSchema);
 
