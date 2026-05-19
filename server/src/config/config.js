@@ -30,6 +30,10 @@ const config = {
     phoneNumber: process.env.TWILIO_PHONE_NUMBER || "",
     whatsappNumber: process.env.TWILIO_WHATSAPP_NUMBER || "",
   },
+  email: {
+    user: process.env.EMAIL_USER || "",
+    pass: process.env.EMAIL_PASS || "",
+  },
 };
 
 export default config;
