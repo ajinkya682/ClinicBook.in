@@ -4,9 +4,9 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import RegisterPage from "./pages/auth/RegisterPage.jsx";
+import AppointmentsPage from "./pages/dashboard/AppointmentsPage.jsx";
+import HomePage from "./pages/dashboard/HomePage.jsx";
 import {
-  Dashboard,
-  Appointments,
   Patients,
   Doctors,
   Prescriptions,
@@ -38,8 +38,8 @@ const App = () => {
           }
         >
           {/* Nested routes mapped inside DashboardLayout shell */}
-          <Route index element={<Dashboard />} />
-          <Route path="appointments" element={<Appointments />} />
+          <Route index element={<HomePage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="patients" element={<Patients />} />
           <Route path="doctors" element={<Doctors />} />
           <Route path="prescriptions" element={<Prescriptions />} />
